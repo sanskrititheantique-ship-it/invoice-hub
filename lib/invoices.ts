@@ -5,6 +5,7 @@ import type postgres from "postgres";
 import { db } from "./db";
 import { Brand, brandOf, seriesOf } from "./brands";
 import { Draft, Settings, calc, creditCode, fyOf, numFmt, r2, todayISO, validate } from "./tax";
+import { LayoutPatch, sanitizePatch, validImage } from "./layout";
 import { upiUri } from "./sheets";
 
 type Tx = postgres.TransactionSql | postgres.Sql;
@@ -29,11 +30,26 @@ export async function getSettings(biz: string): Promise<Settings> {
   const [row] = await db()`select data from business_settings where biz = ${biz}`;
   return { ...(brand.business as unknown as Settings), ...((row?.data as Settings) || {}) };
 }
+export const BUSINESS_KEYS = ["legalName", "tradeName", "gstin", "phone", "email", "website", "signatory", "stateCode", "address", "terms",
+  "bankName", "accName", "account", "ifsc", "upi", "swift", "lut"];
+// Merges into the stored settings, so saving one section never wipes another.
+async function mergeSettings(biz: string, data: Record<string, string>) {
+  await db()`insert into business_settings (biz, data, updated_at) values (${biz}, ${db().json(data)}, now())
+    on conflict (biz) do update set data = business_settings.data || excluded.data, updated_at = now()`;
+}
 export async function saveSettings(biz: string, data: Settings, actor: string) {
   mustBrand(biz);
-  await db()`insert into business_settings (biz, data, updated_at) values (${biz}, ${db().json(data)}, now())
-    on conflict (biz) do update set data = excluded.data, updated_at = now()`;
-  await audit(db(), biz, null, actor, "settings.update", { fields: Object.keys(data) });
+  const clean = Object.fromEntries(BUSINESS_KEYS.map((k) => [k, String(data[k] ?? "").trim().slice(0, 2000)]));
+  await mergeSettings(biz, clean);
+  await audit(db(), biz, null, actor, "settings.update", { fields: BUSINESS_KEYS.filter((k) => data[k] !== undefined) });
+}
+export async function saveLayout(biz: string, input: { layout: LayoutPatch; logoImg: string; sigImg: string }, actor: string) {
+  mustBrand(biz);
+  for (const [name, img] of [["Logo", input.logoImg], ["Signature", input.sigImg]] as const)
+    if (img && !validImage(img)) fail(`${name} must be a PNG, JPG or WebP image under 300 KB.`);
+  const layout = sanitizePatch(input.layout);
+  await mergeSettings(biz, { layout: JSON.stringify(layout), logoImg: input.logoImg || "", sigImg: input.sigImg || "" });
+  await audit(db(), biz, null, actor, "layout.update", { sig: layout.sig, hidden: Object.entries(layout.show || {}).filter(([, on]) => !on).map(([k]) => k) });
 }
 export type CatalogItem = { id?: number; name: string; hsn: string; gst: number; apparel: boolean; price: number; unit: string; note: string };
 export async function listCatalog(biz: string): Promise<CatalogItem[]> {
@@ -91,6 +107,8 @@ export async function setNextNumber(biz: string, code: string, origin: string, n
 /* ---------- create / update ---------- */
 function prepare(brand: Brand, settings: Settings, draft: Draft) {
   const d: Draft = { ...draft, customer: { ...draft.customer, gstin: (draft.customer?.gstin || "").toUpperCase().trim() } };
+  d.layout = sanitizePatch(draft.layout);
+  if (!d.layout.show && !d.layout.sig && d.layout.sigText === undefined && d.layout.thanks === undefined) delete d.layout;
   seriesOf(brand, d.series); // falls back to the first series if unknown
   if (!brand.series.some((s) => s.code === d.series)) d.series = brand.series[0].code;
   const c = calc(d, brand, settings.stateCode || brand.business.stateCode);

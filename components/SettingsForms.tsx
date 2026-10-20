@@ -20,7 +20,7 @@ function useRun() {
 }
 const Note = ({ msg }: { msg: Msg }) => (msg ? <p className={`notice ${msg.ok ? "ok" : "bad"}`} role="status" style={{ margin: 0 }}>{msg.text}</p> : null);
 
-const BIZ: [string, string][] = [["legalName", "Legal name (as on GST certificate)"], ["tradeName", "Trade / brand name"], ["gstin", "GSTIN"], ["phone", "Phone"], ["email", "Email"], ["website", "Website"], ["signatory", "Authorised signatory name"]];
+const BIZ: [string, string][] = [["legalName", "Legal name (as on GST certificate)"], ["tradeName", "Trade / brand name"], ["gstin", "GSTIN"], ["phone", "Phone"], ["email", "Email"], ["website", "Website"], ["signatory", "Authorised signatory name (prints only with a signature line or image)"]];
 const BANK: [string, string][] = [["bankName", "Bank name"], ["accName", "Account holder name"], ["account", "Account number"], ["ifsc", "IFSC"], ["upi", "UPI ID (prints a pay QR on unpaid invoices)"], ["swift", "SWIFT code (foreign clients)"], ["lut", "LUT ARN (export invoices)"]];
 
 export function BusinessForm({ biz, initial }: { biz: string; initial: Settings }) {

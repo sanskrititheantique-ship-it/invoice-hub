@@ -6,6 +6,7 @@ import { CURRENCIES, Draft, GST_RATES, Item, STATES, STATE_NAME, Settings, blank
 import { sheetHTML } from "@/lib/sheets";
 import { createCreditNoteAction, createInvoiceAction, updateInvoiceAction } from "@/app/actions";
 import SheetPreview from "./SheetPreview";
+import { SIG_OPTIONS, ShowKey, SigMode, optionsFor, resolveLayout } from "@/lib/layout";
 
 type CatalogItem = { name: string; hsn: string; gst: number; apparel: boolean; price: number; unit: string; note: string };
 type Customer = { customer: Draft["customer"]; storeName: string; sellerId: string };
@@ -26,6 +27,16 @@ export default function InvoiceEditor(p: Props) {
   const isCN = mode === "credit" || p.docType === "credit_note";
   const s = seriesOf(brand, d.series);
   const L = s.labels || {};
+  const bizLayout = resolveLayout(brand.template, settings.layout);
+  const invLayout = resolveLayout(brand.template, settings.layout, d.layout);
+  // Keeps only real overrides, so an invoice that matches the business layout stores nothing.
+  const setLayout = (fn: (l: NonNullable<Draft["layout"]>) => NonNullable<Draft["layout"]>) => setD((x) => {
+    const next = fn({ ...x.layout });
+    if (next.show) for (const k of Object.keys(next.show) as ShowKey[]) if (next.show[k] === bizLayout.show[k]) delete next.show[k];
+    if (next.show && !Object.keys(next.show).length) delete next.show;
+    if (!next.sig) delete next.sig;
+    return { ...x, layout: Object.keys(next).length ? next : undefined };
+  });
   const supplierState = settings.stateCode || brand.business.stateCode;
 
   // Restore an unsaved new-invoice draft from this browser.
@@ -203,6 +214,23 @@ export default function InvoiceEditor(p: Props) {
           <label className="f"><span>Place of supply</span><select id="posCode" value={d.posCode} onChange={(e) => set("posCode", e.target.value)}><option value="">Auto · {autoPos}</option>{STATES.map(([k, n]) => <option key={k} value={k}>{k} · {n}</option>)}</select></label>
           <label className="f wide"><span>Notes printed on this document</span><textarea id="notes" value={d.notes} onChange={(e) => set("notes", e.target.value)} /></label>
         </div></section>
+
+        <details className="card inv-layout" open={!!d.layout && Object.keys(d.layout).length > 0}>
+          <summary>What prints on this {isCN ? "credit note" : "invoice"}{d.layout && Object.keys(d.layout).length ? " · changed" : ""}</summary>
+          <p className="hint" style={{ margin: "8px 0 0" }}>Starts from the business layout in Settings. Changes here apply to this {isCN ? "credit note" : "invoice"} only.</p>
+          <div className="opt-cols">
+            <label className="f" style={{ gridColumn: "1 / -1" }}><span>Signature area</span>
+              <select id="lay-sig" value={d.layout?.sig || ""} onChange={(e) => setLayout((l) => ({ ...l, sig: (e.target.value || undefined) as SigMode | undefined }))}>
+                <option value="">Business default ({SIG_OPTIONS.find((o) => o.value === bizLayout.sig)?.label})</option>
+                {SIG_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select></label>
+            {optionsFor(brand, s.fields, !!settings.logoImg).map((o) => (
+              <label key={o.key} className="check"><input type="checkbox" checked={invLayout.show[o.key]}
+                onChange={(e) => setLayout((l) => ({ ...l, show: { ...l.show, [o.key as ShowKey]: e.target.checked } }))} /> {o.label}</label>
+            ))}
+          </div>
+          {d.layout && Object.keys(d.layout).length > 0 && <button type="button" className="btn sm" style={{ marginTop: 10 }} onClick={() => setD((x) => ({ ...x, layout: undefined }))}>Use business defaults</button>}
+        </details>
 
         <section className="card sumbar">
           <div><span>Taxable</span><b>{money(c.taxable, c.cur)}</b></div>

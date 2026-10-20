@@ -167,3 +167,12 @@
   .print-root .paper { box-shadow: none !important; margin: 0 !important; }
   .paper { -webkit-print-color-adjust: exact; print-color-adjust: exact; break-after: page; }
 }
+
+/* Layout options: uploaded logo and signature styles */
+.paper .brand-logo{display:block;max-height:64px;max-width:260px;object-fit:contain}
+.p-vy .brand-logo,.p-st .brand-logo{margin:0 auto;max-height:76px;max-width:320px}
+.p-dt .dt-bar .brand-logo{max-height:34px}
+.p-lc .lc-top .brand-logo{max-height:44px}
+.paper .sig-digital p{margin:8px 0 0 auto;max-width:230px;font-size:10px;font-style:italic;opacity:.8;line-height:1.4}
+.paper .sig.has-img .sig-img{display:block;margin:6px 0 0 auto;max-height:56px;max-width:190px;object-fit:contain}
+.paper .sig.has-img .line{margin-top:2px}

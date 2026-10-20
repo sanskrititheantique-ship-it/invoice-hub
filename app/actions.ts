@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { Role, can, clearSession, createSession, currentUser } from "@/lib/auth";
 import * as inv from "@/lib/invoices";
 import type { Draft, Settings } from "@/lib/tax";
+import type { LayoutPatch } from "@/lib/layout";
 
 export type Result<T = unknown> = { ok: true; data?: T } | { ok: false; error: string };
 
@@ -78,6 +79,9 @@ export async function shareAction(biz: string, id: string, on: boolean) {
 /* settings */
 export async function saveSettingsAction(biz: string, data: Settings) {
   return guard(biz, "admin", (a) => inv.saveSettings(biz, data, a));
+}
+export async function saveLayoutAction(biz: string, input: { layout: LayoutPatch; logoImg: string; sigImg: string }) {
+  return guard(biz, "admin", (a) => inv.saveLayout(biz, input, a));
 }
 export async function saveCatalogAction(biz: string, items: inv.CatalogItem[]) {
   return guard(biz, "admin", (a) => inv.saveCatalog(biz, items, a));
