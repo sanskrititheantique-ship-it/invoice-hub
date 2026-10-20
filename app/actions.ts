@@ -66,6 +66,15 @@ export async function updateInvoiceAction(biz: string, id: string, draft: Draft)
 export async function cancelInvoiceAction(biz: string, id: string, reason: string) {
   return guard(biz, "editor", (a) => inv.cancelDoc(biz, id, reason, a));
 }
+export async function deleteInvoiceAction(biz: string, id: string) {
+  return guard(biz, "editor", (a) => inv.deleteDoc(biz, id, a));
+}
+export async function markPaidAction(biz: string, id: string) {
+  return guard(biz, "editor", (a) => inv.markPaid(biz, id, a));
+}
+export async function markUnpaidAction(biz: string, id: string) {
+  return guard(biz, "editor", (a) => inv.markUnpaid(biz, id, a));
+}
 export async function addPaymentAction(biz: string, id: string, p: { date: string; amount: number; mode: string; ref: string; note: string }) {
   return guard(biz, "editor", (a) => inv.addPayment(biz, id, p, a));
 }

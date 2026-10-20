@@ -4,6 +4,7 @@ import { can, requireUser } from "@/lib/auth";
 import { stats } from "@/lib/invoices";
 import { fmtN, fyLabel, fyOf } from "@/lib/tax";
 import { logoutAction } from "./actions";
+import FindBox from "@/components/FindBox";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ d
     <>
       <div className="top"><div className="wrap top-in">
         <div className="brand"><span className="brand-name">Invoice Hub</span><span className="brand-sub">FY {fyLabel(fy)}</span></div>
+        <FindBox />
         <form action={logoutAction} className="who"><span>{user.email}</span><button className="linkbtn">Sign out</button></form>
       </div></div>
       <main className="wrap">

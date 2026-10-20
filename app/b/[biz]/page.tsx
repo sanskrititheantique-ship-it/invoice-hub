@@ -19,6 +19,7 @@ export default async function Register({ params, searchParams }: { params: Promi
 
   return (
     <div className="stack">
+      {sp.deleted && <p className="notice ok" style={{ margin: 0 }}>Deleted {sp.deleted}. The next invoice in that series reuses its number.</p>}
       <div className="row between">
         <h2>Register</h2>
         <div className="row">

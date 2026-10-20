@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { addPaymentAction, cancelInvoiceAction, deletePaymentAction, shareAction } from "@/app/actions";
+import { addPaymentAction, cancelInvoiceAction, deleteInvoiceAction, deletePaymentAction, markPaidAction, markUnpaidAction, shareAction } from "@/app/actions";
 import { fmtDate, money, todayISO } from "@/lib/tax";
 
 type Pay = { id: number; date: string; amount: number; mode: string; ref: string; note: string };
@@ -12,6 +12,7 @@ type Props = {
   shareToken: string | null; appUrl: string; canEdit: boolean; payments: Pay[]; paymentModes: string[];
   credits: { id: string; number: string; date: string; grand: number; status: string }[];
   against: { id: string; number: string; date: string } | null;
+  canDelete: boolean; deleteReason: string;
 };
 
 export default function InvoiceActions(p: Props) {
@@ -19,6 +20,7 @@ export default function InvoiceActions(p: Props) {
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [reason, setReason] = useState("");
   const [pay, setPay] = useState({ date: todayISO(), amount: p.balance > 0 ? String(p.balance) : "", mode: p.paymentModes[0] || "UPI", ref: "", note: "" });
   const cancelled = p.status === "cancelled";
@@ -75,13 +77,19 @@ export default function InvoiceActions(p: Props) {
               <li key={x.id}><span>{fmtDate(x.date)} · {x.mode}{x.ref ? ` · ${x.ref}` : ""}</span><span>{money(x.amount, p.currency)}{p.canEdit && !cancelled && <> <button className="linkbtn" disabled={pending} onClick={() => run(() => deletePaymentAction(p.biz, x.id), "Payment removed.")}>Remove</button></>}</span></li>
             ))}</ul>
           ) : <p className="hint" style={{ margin: 0 }}>No payments recorded.</p>}
+          {p.canEdit && !cancelled && (p.balance > 0 || p.payments.length > 0) && (
+            <div className="row">
+              {p.balance > 0 && <button className="btn sm primary" disabled={pending} onClick={() => run(() => markPaidAction(p.biz, p.id), "Marked paid.")}>Mark paid</button>}
+              {p.payments.length > 0 && <button className="btn sm" disabled={pending} onClick={() => run(() => markUnpaidAction(p.biz, p.id), "Marked unpaid. All payments on it were removed.")}>Mark unpaid</button>}
+            </div>
+          )}
           {p.canEdit && !cancelled && p.balance > 0 && (
             <div className="grid">
               <label className="f"><span>Amount</span><input id="payAmount" inputMode="decimal" value={pay.amount} onChange={(e) => setPay({ ...pay, amount: e.target.value })} /></label>
               <label className="f"><span>Date</span><input id="payDate" type="date" value={pay.date} onChange={(e) => setPay({ ...pay, date: e.target.value })} /></label>
               <label className="f"><span>Mode</span><select id="payMode" value={pay.mode} onChange={(e) => setPay({ ...pay, mode: e.target.value })}>{p.paymentModes.map((m) => <option key={m}>{m}</option>)}</select></label>
               <label className="f"><span>Reference</span><input id="payRef" value={pay.ref} onChange={(e) => setPay({ ...pay, ref: e.target.value })} placeholder="UTR / transaction ID" /></label>
-              <div className="wide"><button className="btn primary" disabled={pending} onClick={() => run(() => addPaymentAction(p.biz, p.id, { ...pay, amount: Number(pay.amount) }), "Payment recorded.")}>Record payment</button></div>
+              <div className="wide"><button className="btn" disabled={pending} onClick={() => run(() => addPaymentAction(p.biz, p.id, { ...pay, amount: Number(pay.amount) }), "Payment recorded.")}>Record part payment</button></div>
             </div>
           )}
         </section>
@@ -102,9 +110,24 @@ export default function InvoiceActions(p: Props) {
           <div className="row">
             {!cancelled && <Link className="btn sm" href={`/b/${p.biz}/inv/${p.id}/edit`}>Edit</Link>}
             {isInvoice && <Link className="btn sm" href={`/b/${p.biz}/new?from=${p.id}`}>Duplicate as new</Link>}
-            {!cancelled && <button className="btn sm danger" onClick={() => setConfirmCancel(true)}>Cancel {isInvoice ? "invoice" : "credit note"}</button>}
+            {!cancelled && <button className="btn sm danger" onClick={() => { setConfirmCancel(true); setConfirmDelete(false); }}>Cancel {isInvoice ? "invoice" : "credit note"}</button>}
+            {p.canDelete && <button className="btn sm danger" onClick={() => { setConfirmDelete(true); setConfirmCancel(false); }}>Delete</button>}
           </div>
-          <p className="hint" style={{ margin: 0 }}>Edit fixes typos and details before you file GST returns. After filing, issue a credit note instead. Cancelling keeps the number in the register, marked cancelled.</p>
+          <p className="hint" style={{ margin: 0 }}>Made a mistake? Edit fixes details before you file GST returns. After filing, issue a credit note. Cancel keeps the number, marked cancelled. {p.canDelete ? "Delete removes this invoice completely, because it is the latest in its series." : `Delete isn't available: ${p.deleteReason}`}</p>
+          {confirmDelete && (
+            <div className="confirm">
+              <b>Delete {p.number} completely?</b>
+              <span className="hint">It disappears from the register, and the next invoice you make gets this same number. Only do this if you haven't sent it to the customer. If you have, cancel it instead.</span>
+              <div className="row">
+                <button className="btn danger sm" disabled={pending} onClick={() => start(async () => {
+                  const r = await deleteInvoiceAction(p.biz, p.id);
+                  if (!r.ok) { setMsg({ ok: false, text: r.error }); setConfirmDelete(false); return; }
+                  router.push(`/b/${p.biz}?deleted=${encodeURIComponent(p.number)}`); router.refresh();
+                })}>Delete it</button>
+                <button className="btn sm" onClick={() => setConfirmDelete(false)}>Keep it</button>
+              </div>
+            </div>
+          )}
           {confirmCancel && (
             <div className="confirm">
               <b>Cancel {p.number}?</b>

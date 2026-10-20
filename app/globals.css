@@ -176,3 +176,6 @@ table.reg{width:100%;border-collapse:collapse;min-width:860px}
 .upload-row .thumb{max-height:44px;max-width:160px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:4px;padding:3px}
 .inv-layout summary{cursor:pointer;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .inv-layout .opt-cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px 16px;margin-top:12px}
+.findbox{display:flex;gap:6px;align-items:center}
+.findbox input{width:170px;padding:6px 10px;font-size:13px;font-family:var(--f-num)}
+@media (max-width:640px){.findbox{width:100%}.findbox input{flex:1;width:auto}}

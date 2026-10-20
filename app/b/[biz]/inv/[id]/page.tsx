@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { brandOf, seriesOf } from "@/lib/brands";
 import { can, requireAccess } from "@/lib/auth";
-import { draftFromRow, getDoc, getSettings, qrFor } from "@/lib/invoices";
+import { deleteCheck, draftFromRow, getDoc, getSettings, qrFor } from "@/lib/invoices";
 import { sheetHTML } from "@/lib/sheets";
 import { r2 } from "@/lib/tax";
 import { appUrl } from "@/lib/url";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 const ACTIONS: Record<string, string> = {
   "invoice.create": "Issued", "credit_note.create": "Credit note issued", "invoice.edit": "Edited", "invoice.cancel": "Cancelled",
-  "payment.add": "Payment recorded", "payment.remove": "Payment removed", "share.on": "Share link created", "share.off": "Share link turned off",
+  "payment.add": "Payment recorded", "payment.remove": "Payment removed", "payment.clear": "Marked unpaid", "share.on": "Share link created", "share.off": "Share link turned off",
 };
 
 export default async function InvoicePage({ params, searchParams }: { params: Promise<{ biz: string; id: string }>; searchParams: Promise<{ new?: string }> }) {
@@ -24,6 +24,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
   const { row, payments, credits, ref, history } = doc;
   const settings = await getSettings(biz);
   const qr = await qrFor(row, settings);
+  const del = await deleteCheck(row);
   const d = draftFromRow(row);
   const html = sheetHTML({ brand, settings, d, number: row.number, docType: row.doc_type, ref, status: row.status, paid: Number(row.paid), credited: row.credited, createdAt: String(row.created_at), qr });
   const balance = r2(Number(row.grand) - Number(row.totals?.advance || 0) - Number(row.paid) - Number(row.credited || 0));
@@ -53,6 +54,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
         brandName={settings.tradeName || brand.name} upi={settings.upi || ""} shareToken={row.share_token} appUrl={await appUrl()}
         canEdit={can(user, biz, "editor")} payments={payments.map((x) => ({ ...x, amount: Number(x.amount) }))} paymentModes={seriesOf(brand, row.series).paymentModes}
         credits={credits.map((c) => ({ id: c.id, number: c.number, date: c.date, grand: Number(c.grand), status: c.status }))} against={ref ? { id: ref.id, number: ref.number, date: ref.date } : null}
+        canDelete={del.ok} deleteReason={del.reason}
       />
     </div>
   );

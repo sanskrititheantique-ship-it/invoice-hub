@@ -262,6 +262,82 @@ export async function setShare(biz: string, id: string, on: boolean, actor: stri
 }
 
 /* ---------- reads ---------- */
+/* ---------- quick fixes ---------- */
+const codeOf = (number: string) => number.split("/")[0];
+
+/** Only the newest number in a series can be deleted, so numbering never has a gap. */
+export async function deleteCheck(row: Pick<InvoiceRow, "id" | "number" | "origin" | "fy" | "seq">): Promise<{ ok: boolean; reason: string }> {
+  const sql = db();
+  if (row.origin !== "G") return { ok: false, reason: "Invoices issued by your website can't be deleted. Cancel it instead." };
+  const [c] = await sql<{ seq: number }[]>`select seq from counters where code = ${codeOf(row.number)} and origin = ${row.origin} and fy = ${row.fy}`;
+  if (!c || c.seq !== row.seq) return { ok: false, reason: "Only the latest number in a series can be deleted, so your numbering never has a gap. Cancel this one instead." };
+  const [p] = await sql<{ n: number }[]>`select count(*)::int as n from payments where invoice_id = ${row.id}`;
+  if (p.n) return { ok: false, reason: "It has payments recorded. Mark it unpaid first." };
+  const [k] = await sql<{ n: number }[]>`select count(*)::int as n from invoices where ref_invoice_id = ${row.id}`;
+  if (k.n) return { ok: false, reason: "It has credit notes against it." };
+  return { ok: true, reason: "" };
+}
+export async function deleteDoc(biz: string, id: string, actor: string) {
+  await db().begin(async (tx) => {
+    const [row] = await tx<InvoiceRow[]>`select * from invoices where id = ${id} and biz = ${biz} for update`;
+    if (!row) fail("Not found.");
+    const code = codeOf(row!.number);
+    // Lock the counter so no one issues the next number while this one is removed.
+    const [c] = await tx<{ seq: number }[]>`select seq from counters where code = ${code} and origin = ${row!.origin} and fy = ${row!.fy} for update`;
+    if (row!.origin !== "G" || !c || c.seq !== row!.seq) fail("Only the latest invoice in a series can be deleted. Cancel this one instead.");
+    const [p] = await tx<{ n: number }[]>`select count(*)::int as n from payments where invoice_id = ${id}`;
+    const [k] = await tx<{ n: number }[]>`select count(*)::int as n from invoices where ref_invoice_id = ${id}`;
+    if (p.n) fail("It has payments recorded. Mark it unpaid first.");
+    if (k.n) fail("It has credit notes against it.");
+    await tx`delete from invoices where id = ${id}`;
+    await tx`update counters set seq = seq - 1 where code = ${code} and origin = ${row!.origin} and fy = ${row!.fy}`;
+    if (row!.ref_invoice_id) await refreshStatus(tx, row!.ref_invoice_id);
+    await audit(tx, biz, null, actor, "invoice.delete", { number: row!.number, customer: row!.customer_name, grand: row!.grand, date: String(row!.date).slice(0, 10) });
+  });
+}
+export async function markPaid(biz: string, id: string, actor: string) {
+  const doc = await getDoc(biz, id);
+  if (!doc) fail("Not found.");
+  const r = doc!.row;
+  const balance = r2(Number(r.grand) - Number(r.totals?.advance || 0) - Number(r.paid) - Number(r.credited || 0));
+  if (balance <= 0) fail("Nothing is due on this invoice.");
+  await addPayment(biz, id, { date: todayISO(), amount: balance, mode: r.data?.paymentMode || "", ref: r.data?.paymentRef || "", note: "Marked paid" }, actor);
+}
+export async function markUnpaid(biz: string, id: string, actor: string) {
+  await db().begin(async (tx) => {
+    const [row] = await tx<InvoiceRow[]>`select * from invoices where id = ${id} and biz = ${biz} for update`;
+    if (!row || row.doc_type !== "invoice") fail("Not found.");
+    if (row!.status === "cancelled") fail("This invoice is cancelled.");
+    const gone = await tx<{ amount: number }[]>`delete from payments where invoice_id = ${id} returning amount`;
+    await refreshStatus(tx, id);
+    await audit(tx, biz, id, actor, "payment.clear", { removed: gone.length, amount: r2(gone.reduce((a, x) => a + Number(x.amount), 0)) });
+  });
+}
+
+/** Finds documents by number across the given businesses. Accepts "VYR/G/2627/0005", "vyr-g-2627-5" or just "5". */
+export async function findByNumber(bizzes: string[], q: string, prefer?: string) {
+  if (!bizzes.length) return [];
+  const raw = q.trim().toUpperCase().replace(/[\s-]+/g, "/").replace(/\/+/g, "/");
+  if (!raw) return [];
+  const parts = raw.split("/");
+  const last = parts[parts.length - 1];
+  const seqOnly = /^\d{1,5}$/.test(last) ? Number(last) : null;
+  const sql = db();
+  // Full number (any padding), or a sequence number alone, or any partial text.
+  const full = parts.length === 4 && seqOnly !== null ? `${parts[0]}/${parts[1]}/${parts[2]}/${String(seqOnly).padStart(4, "0")}` : null;
+  const run = (cond: postgres.PendingQuery<postgres.Row[]>) => sql<{ id: string; biz: string; number: string; date: string; customer_name: string; grand: number; currency: string; status: string; doc_type: string }[]>`
+    select id, biz, number, to_char(date,'YYYY-MM-DD') as date, customer_name, grand, currency, status, doc_type from invoices
+    where biz in ${sql(bizzes)} and ${cond}
+    order by (biz = ${prefer || ""}) desc, (fy = ${fyOf()}) desc, date desc limit 30`;
+  if (full) return run(sql`number = ${full}`);
+  if (parts.length === 1 && seqOnly !== null) {
+    // "5" means invoice 0005; if there's none, treat it as text (e.g. "2627" lists that year).
+    const bySeq = await run(sql`seq = ${seqOnly}`);
+    if (bySeq.length) return bySeq;
+  }
+  return run(sql`number ilike ${"%" + raw + "%"}`);
+}
+
 export async function getDoc(biz: string, id: string) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const [row] = await db()<InvoiceRow[]>`select * from invoices where id = ${id} and biz = ${biz}`;
