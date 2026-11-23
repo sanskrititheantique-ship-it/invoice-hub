@@ -15,6 +15,18 @@ GST invoicing for Vyrelle, DT.live, LoudCousin and Sanskriti The Antique. One ap
 - Users with access per business: viewer, editor, admin
 - Website API so your stores issue invoices automatically (`W` series, safe to retry)
 
+## Internships (LoudCousin)
+
+LoudCousin → **Internships** makes offer letters, internship agreements and completion certificates in the LoudCousin design.
+
+- **New internship**: fill the form. Every field has a **Show / Hidden** switch; hidden details stay saved but leave the documents.
+- Agreement terms can be edited, hidden, reordered, added or reset to the standard 14.
+- Reference number is made on first save and never changes: `LC/INT/2607/SW62` = start month (YYMM) + 4 random characters, so it doesn't reveal how many interns there have been. The certificate uses `LC/CERT/2607/SW62`.
+- Download buttons save first, then open the PDF page: **Offer letter**, **Agreement**, **Offer + agreement**, **Certificate**. In the print window choose *Save as PDF* and turn off *Headers and footers*.
+- Every download is recorded on the internship's page (who, when, and a frozen copy of what it said).
+- To turn Internships on for another business, add `internships: true` to it in `lib/brands.ts`.
+- Tables: `internships`, `internship_documents` (in `db/schema.sql`; run `npm run db:migrate` once after pulling). The migration also adds the first intern, Rahul Kumar (LC/INT/2607/SW62).
+
 ## Set up (once)
 
 1. **GitHub**: create a private repo named `invoice-hub`, then in this folder:

@@ -1,0 +1,131 @@
+/* LoudCousin internship documents (lib/internship-sheets.ts). Fixed print palette, not themed UI.
+   Portrait pages flow: the letterhead and footer repeat on every printed page (thead/tfoot). */
+.lcx{--ink:#0E0E0E;--lime:#D4FF5A;--pink:#FF4FA3;--paper:#F4F2EC;--grey:#595959;
+  position:relative;background:#fff;color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;color-scheme:light;text-align:left;overflow:hidden}
+.lcx *{box-sizing:border-box}
+.lcx p{margin:0}
+.lcx-a4{width:210mm;min-height:297mm}
+.lcx-flow{width:100%;min-height:297mm;border-collapse:collapse}
+.lcx-flow>thead>tr>td,.lcx-flow>tfoot>tr>td{padding:0}
+.lcx-flow>tfoot>tr>td{vertical-align:bottom}
+.lcx-body{vertical-align:top;padding:6px 56px 20px;position:relative}
+.lcx-headgap{height:22px}
+.lcx-anton,.lcx-slab{font-family:Anton,Impact,"Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.005em;line-height:.95}
+.lcx-slab{display:inline-block;background:var(--ink);color:var(--lime);border-radius:10px;padding:5px 15px 8px;transform:rotate(-1.3deg)}
+.lcx-h1{font-size:50px}.lcx-h2{font-size:42px}.lcx-h3{font-size:54px}.lcx-h4{font-size:96px;padding:6px 26px 12px;border-radius:12px;transform:rotate(-1.5deg)}
+.lcx-label{font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--grey)}
+.lcx-strong{font-weight:800}
+.lcx-small{font-size:13px;font-weight:600;color:#444}
+.lcx-dim{color:#444}
+.lcx-blank{color:#9a9a9a;font-weight:500;font-style:italic}
+
+/* letterhead + footer */
+.lcx-head-in{height:88px;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 56px}
+.lcx-pink{height:4px;background:var(--pink)}
+.lcx-mark{display:flex;align-items:center;gap:14px}
+.lcx-logo{width:46px;height:46px;flex-shrink:0}
+.lcx-word{font-weight:900;font-size:27px;letter-spacing:-.03em;line-height:1;color:var(--paper)}
+.lcx-word span{color:var(--lime)}
+.lcx-word-ink{color:var(--ink);font-size:26px}
+.lcx-tag{font-weight:800;font-size:10px;letter-spacing:.2em;color:#8A8A8A;margin-top:3px}
+.lcx-contact{text-align:right;font-size:12px;font-weight:600;line-height:1.6;color:#D9D6CE}
+.lcx-foot{margin:0 56px;padding:12px 0 16px;border-top:1.5px solid var(--ink);display:flex;justify-content:space-between;gap:16px;font-size:12px;font-weight:600;color:#555}
+
+/* offer */
+.lcx-flower-tr{position:absolute;top:4px;right:52px;width:74px;height:74px}
+.lcx-hero{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin-bottom:18px}
+.lcx-to{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;font-size:14px;line-height:1.5;margin-bottom:16px}
+.lcx-to .lcx-label{margin-bottom:4px}
+.lcx-meta{text-align:right;flex-shrink:0}
+.lcx-meta .lcx-label{margin:8px 0 4px}.lcx-meta .lcx-label:first-child{margin-top:0}
+.lcx-metav{font-weight:700}
+.lcx-letter{font-size:15.5px;line-height:1.55;display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.lcx-boxes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px;break-inside:avoid}
+.lcx-box{border:1.5px solid var(--ink);border-radius:10px;padding:10px 14px}
+.lcx-boxv{font-size:15px;font-weight:800;margin-top:3px}
+.lcx-signrow{display:flex;gap:20px;align-items:stretch;break-inside:avoid}
+.lcx-signer{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:4px}
+.lcx-signline{height:36px;border-bottom:1.5px solid var(--ink);margin-bottom:6px}
+.lcx-esign{flex:1;border:1.5px dashed var(--ink);border-radius:10px;padding:10px 14px;background:#FAFAF6;display:flex;flex-direction:column;gap:4px}
+.lcx-esign .lcx-label{color:var(--ink)}
+.lcx-esign-lines{font-size:12px;color:#444;line-height:1.55}
+
+/* agreement */
+.lcx-titlerow{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:18px}
+.lcx-titlel{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.lcx-meta-sm{text-align:right;font-size:13px;line-height:1.5;flex-shrink:0}
+.lcx-para{font-size:14px;line-height:1.6;margin-bottom:18px!important}
+.lcx-section{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:.16em;margin:6px 0 12px;break-after:avoid}
+.lcx-num{background:var(--lime);border:1.5px solid var(--ink);border-radius:6px;padding:2px 8px}
+.lcx-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border:1.5px solid var(--ink);border-radius:10px;overflow:hidden;margin-bottom:20px;break-inside:avoid}
+.lcx-cell{padding:8px 14px;border-bottom:1.5px solid var(--ink)}
+.lcx-cell:nth-child(odd){border-right:1.5px solid var(--ink)}
+.lcx-details .lcx-cell:nth-last-child(1),.lcx-details .lcx-cell:nth-last-child(2):nth-child(odd){border-bottom:0}
+.lcx-cl{font-size:12px;font-weight:700;color:var(--grey)}
+.lcx-cv{font-size:14px;font-weight:800}
+.lcx-terms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:26px;row-gap:12px;font-size:13.5px;line-height:1.5;margin-bottom:20px}
+.lcx-term{break-inside:avoid}
+.lcx-span{grid-column:1/-1}
+.lcx-keep{break-inside:avoid}
+.lcx-decl{font-size:13.5px;line-height:1.5;background:var(--paper);border-radius:10px;padding:10px 14px;margin-bottom:14px}
+.lcx-sigs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.lcx-sigcard{border:1.5px solid var(--ink);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lcx-sigcard .lcx-label{color:var(--ink)}
+.lcx-sigspace{height:66px;border:1.5px dashed var(--ink);border-radius:8px;background:#FAFAF6;display:flex;align-items:flex-end;padding:6px 10px;font-size:12px;font-weight:600;color:var(--grey)}
+.lcx-siglines{font-size:13px;line-height:1.65}
+.lcx-guardian{font-size:12.5px;line-height:1.6;border-top:1px dashed #8A8A8A;padding-top:8px;margin-top:14px}
+
+/* certificate (A4 landscape, one page) */
+.lcx-cert{width:297mm;height:210mm;background:var(--paper)}
+.lcx-ticker{position:absolute;top:0;left:0;right:0;height:24px;background:var(--ink);display:flex;align-items:center;justify-content:center;gap:18px;font-size:11px;font-weight:800;letter-spacing:.2em;color:#8A8A8A}
+.lcx-pinkstar{color:var(--pink)}
+.lcx-bigstar{position:absolute;top:110px;left:252px;width:620px;height:620px;opacity:.05}
+.lcx-cflower1{position:absolute;top:210px;left:92px;width:96px;height:96px;z-index:1}
+.lcx-cflower2{position:absolute;top:250px;right:96px;width:70px;height:70px;z-index:1}
+.lcx-certframe{position:absolute;top:44px;left:32px;right:32px;bottom:28px;border:2.5px solid var(--ink);border-radius:18px;padding:30px 48px;display:flex;flex-direction:column;align-items:center}
+.lcx-certtop{width:100%;display:flex;justify-content:space-between;align-items:center}
+.lcx-certtop .lcx-logo{width:44px;height:44px}
+.lcx-certhead{margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.lcx-presented{margin-top:24px;font-size:17px;font-weight:600;color:#333}
+.lcx-certname{margin-top:6px;font-size:44px;font-weight:900;letter-spacing:-.02em;line-height:1.1;text-align:center}
+.lcx-underline{width:320px;height:4px;background:var(--pink);border-radius:2px;margin-top:6px}
+.lcx-certbody{margin-top:16px!important;max-width:780px;text-align:center;font-size:16px;line-height:1.6}
+.lcx-certfoot{margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:flex-end;gap:28px}
+.lcx-certfoot .lcx-esign{flex:0 0 290px;background:#fff}
+.lcx-w270{flex:0 0 270px}
+.lcx-verify{text-align:right;font-size:12px;font-weight:600;color:#444;line-height:1.5}
+
+/* print page wrapper */
+.lcx-stack{display:flex;flex-direction:column;align-items:center;gap:24px}
+.lcx-stack .lcx{box-shadow:0 8px 30px rgba(0,0,0,.15)}
+
+@media print{
+  @page{margin:0}
+  .lcx{-webkit-print-color-adjust:exact;print-color-adjust:exact;box-shadow:none!important}
+  .lcx-stack{gap:0;display:block}
+  .lcx-a4{min-height:0;break-after:page}
+  .lcx-a4:last-child{break-after:auto}
+  .lcx-flow{min-height:0}
+  .lcx-cert{break-after:auto}
+}
+
+/* Internship editor (app chrome, follows the business theme) */
+.ix-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.ix-field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.ix-field.wide{grid-column:1/-1}
+.ix-fieldhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ix-fieldhead>label:first-child{font-weight:500}
+.ix-switch{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--fg);font-size:13px;user-select:none}
+.ix-switch input{width:auto;accent-color:var(--fg)}
+.ix-mini{font-size:11.5px;color:var(--muted)}
+.ix-flag{justify-content:center;padding:8px 10px;border:1px dashed var(--line);border-radius:calc(var(--r) - 2px)}
+.ix-off input:not([type=checkbox]),.ix-off textarea,.ix-off select{opacity:.45}
+.ix-off .ix-termtitle{text-decoration:line-through}
+.ix-term{display:flex;flex-direction:column;gap:8px}
+.ix-termhead{display:flex;align-items:center;gap:10px}
+.ix-termtitle{flex:1;font-weight:600}
+.ix-term textarea{background:var(--surface);min-height:56px}
+.ix-tabs{margin-bottom:10px}
+.ix-tabs button{padding:7px 14px;border-radius:calc(var(--r) - 2px);border:0;background:none;color:var(--muted);font-weight:500;cursor:pointer}
+.ix-tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}

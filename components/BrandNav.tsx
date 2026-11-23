@@ -2,11 +2,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export default function BrandNav({ biz, canEdit, isAdmin }: { biz: string; canEdit: boolean; isAdmin: boolean }) {
+export default function BrandNav({ biz, canEdit, isAdmin, internships }: { biz: string; canEdit: boolean; isAdmin: boolean; internships?: boolean }) {
   const path = usePathname();
   const links = [
     { href: `/b/${biz}`, label: "Register", on: path === `/b/${biz}` || path.startsWith(`/b/${biz}/inv`) },
     ...(canEdit ? [{ href: `/b/${biz}/new`, label: "New invoice", on: path.startsWith(`/b/${biz}/new`) }] : []),
+    ...(internships ? [{ href: `/b/${biz}/internships`, label: "Internships", on: path.startsWith(`/b/${biz}/internships`) }] : []),
     ...(isAdmin ? [{ href: `/b/${biz}/settings`, label: "Settings", on: path.startsWith(`/b/${biz}/settings`) }] : []),
   ];
   return (

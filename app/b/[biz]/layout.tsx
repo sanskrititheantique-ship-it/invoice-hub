@@ -15,7 +15,7 @@ export default async function BrandLayout({ children, params }: { children: Reac
     <div className="brand-area" data-brand={biz}>
       <div className="top"><div className="wrap top-in">
         <Link href={`/b/${biz}`} className="brand"><span className="brand-name">{brand.name}</span><span className="brand-sub">Invoices</span></Link>
-        <BrandNav biz={biz} canEdit={can(user, biz, "editor")} isAdmin={can(user, biz, "admin")} />
+        <BrandNav biz={biz} canEdit={can(user, biz, "editor")} isAdmin={can(user, biz, "admin")} internships={!!brand.internships} />
         <FindBox biz={biz} />
         <form action={logoutAction} className="who"><Link href="/">All businesses</Link><span>·</span><span>{user.email}</span><button className="linkbtn">Sign out</button></form>
       </div></div>

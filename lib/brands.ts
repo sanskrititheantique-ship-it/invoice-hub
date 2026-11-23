@@ -27,6 +27,8 @@ export type Brand = {
   template: "vy" | "dt" | "lc" | "st";
   business: BusinessDefaults;
   series: Series[];
+  /** Shows the Internships section (offer letters, agreements, certificates). */
+  internships?: boolean;
 };
 
 export const UNITS = ["Nos", "Pcs", "Set", "Pair", "Box", "Seat", "Course", "Hrs", "Month", "Project", "Lot"];
@@ -71,7 +73,7 @@ export const BRANDS: Brand[] = [
     }],
   },
   {
-    key: "loudcousin", name: "loudcousin", template: "lc",
+    key: "loudcousin", name: "loudcousin", template: "lc", internships: true,
     business: { legalName: "Deepanshu Empire", tradeName: "LoudCousin", stateCode: "09", address: "Meerut, Uttar Pradesh", website: "loudcousin.com", email: "team@loudcousin.com", phone: "+91 98706 00903",
       terms: "Payment is due by the date shown.\nPlease quote the invoice number as the transfer reference." },
     series: [{

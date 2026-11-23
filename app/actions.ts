@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { Role, can, clearSession, createSession, currentUser } from "@/lib/auth";
 import * as inv from "@/lib/invoices";
+import * as interns from "@/lib/internships";
 import type { Draft, Settings } from "@/lib/tax";
 import type { LayoutPatch } from "@/lib/layout";
 
@@ -103,4 +104,9 @@ export async function createApiKeyAction(biz: string, name: string) {
 }
 export async function revokeApiKeyAction(biz: string, id: number) {
   return guard(biz, "admin", (a) => inv.revokeApiKey(biz, id, a));
+}
+
+/* internships (LoudCousin) */
+export async function saveInternshipAction(biz: string, id: string | null, payload: unknown, status: string) {
+  return guard(biz, "editor", (a) => (id ? interns.updateInternship(biz, id, payload, status, a) : interns.createInternship(biz, payload, status, a)));
 }
